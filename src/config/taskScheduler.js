@@ -105,12 +105,11 @@ const runTask = async () => {
   }
 };
 
-// Inicia a tarefa agendada para rodar a cada 10 minutos
+// Inicia a tarefa agendada para rodar a cada 5 minutos
 const start = () => {
-  cron.schedule('*/10 * * * *', runTask); // Executa a cada 10 minutos
-  console.log('Tarefa agendada para executar a cada 10 minutos.');
+  cron.schedule('*/5 * * * *', runTask); // Executa a cada 5 minutos
+  console.log('Tarefa agendada para executar a cada 5 minutos.');
 };
-
 
 module.exports = {
   start,
