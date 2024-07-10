@@ -1,6 +1,6 @@
 const app = require('./config/custom-express');
 const taskScheduler = require('../src/config/taskScheduler');
-let port = 3000;
+let port = 8006;
 
 app.listen(port,() => {
   console.log(`Server rodando na porta ${port}`);
