@@ -1,9 +1,4 @@
-# Diretório de dependências do Node.js
 node_modules/
-
-# Arquivos de configuração de ambiente
 .env
-
-# Arquivo de lock de dependências do Node.js
 package-lock.json
 
