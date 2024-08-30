@@ -31,6 +31,18 @@ class ConheceuModel {
       throw error;
     }
   }
+
+  async getConheceu(data){
+    try {
+      
+      const [result] = await this.conn.raw(`SELECT idrdstationfonte FROM tblfconheceu WHERE Codigo = ? `, data);
+    
+      return result[0].idrdstationfonte;
+    } catch (error) {
+      console.error('Erro Get Conheceu:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = ConheceuModel;

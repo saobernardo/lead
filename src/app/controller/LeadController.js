@@ -106,6 +106,118 @@ class LeadController {
       next(error);
     }
   }
+
+  async delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async churchrp_para_rdstation(req, res, next) {
+
+    const vendedor = async (consultor) => {
+      const vendedores = {
+        'Raissa Faria': '642ac2f0bc8ece001667d2d4',
+        'Rosi': '63e2abb3be0e0b001d8da842',
+        'Laion': '642ac928121375001b394324',
+        'Gesley  Carvalho Marciano': '63b87f69566d650014f6bf24',
+        'Laryssa Leal': '65423de8869b2a0012cf3091',
+      };
+      return vendedores[consultor] || '63b87f69566d650014f6bf24'; // Valor padrão
+    };
+
+    const fonte = async (db, conheceu) => {
+      const conheceuModel = new ConheceuModel(db);
+      return await conheceuModel.getConheceu(conheceu);
+    };
+
+    // Função para mapear etapas para seus respectivos IDs
+    /*   const etapa = async (etapa) => {
+         const etapas = {
+           'Prospecção': '66cf88faad502d00277909a7',
+           'Investigação': '66cf897839b12e001459f08a',
+           'Apresentação/Demonstração': '66cf8989436f5f0014ee1e19',
+           'Superação de Objeções/Negociação': '66cf899906dee8002258f99a',
+           'Fechamento': '66cf89a77cdd59001cd3dd53',
+           'Pós-Venda': '66cf89b206dee80019590129',
+           'Cancelado': '66cf89bcaf3cdb001489abfb'
+         };
+         return etapas[etapa] || null; // Retorna null para valores inesperados
+       };*/
+
+
+    try {
+      const db = await connectionDB();
+      if (!db) {
+        throw new Error('Falha ao obter conexão com o banco de dados');
+      }
+
+      const clientesModel = new ClientesModel(db);
+      const leadsNoBanco = await clientesModel.listLeads();
+      const dadosParaEnviar = [];
+
+      // Verificar se há leads para processar
+      if (leadsNoBanco.length === 0) {
+        return res.status(200).json({ message: 'Nenhum lead encontrado para processar.' });
+      }
+
+      let leadsCreate;
+      let atualizaLeadRP;
+
+      for (const lead of leadsNoBanco) {
+        const fonteId = await fonte(db, lead.Conheceu);
+
+        let nome;
+
+        if (!lead.contato || lead.contato.trim().length === 0 || lead.contato.trim().length <= 3) {
+          nome = lead.Email.replace(/\s+/g, '');
+        } else {
+          nome = lead.contato.trim();
+        }
+
+
+        const data = {
+          deal: {
+            name: nome,
+            deal_custom_fields: [
+              {
+                value: lead.Obs,
+                custom_field_id: '66cf875c70c0650014f210d4'
+              }
+            ],
+            user_id: await vendedor(lead.Consultor)
+          },
+          deal_source: { _id: fonteId },
+          contacts: [
+            {
+              emails: [{ email: lead.Email.replace(/\s+/g, '') }],
+              phones: [{ phone: lead.FoneCel.trim(), type: 'cellphone' }],
+              name: nome
+            }
+          ],
+          deal_products: [{ name: lead.Produto }]
+        };
+
+        await delay(10000); 
+
+        leadsCreate = await RDStation.createNegociacao(data);
+
+        atualizaLeadRP = await clientesModel.updateLead({
+          codigo: lead.Codigo,
+          codRDstation: leadsCreate.id
+        });
+
+        //break; 
+        dadosParaEnviar.push(data);
+      }
+
+      return res.status(200).json("foram atualizados: " + dadosParaEnviar.length + "Leads no RDstation");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+
+
 }
 
 module.exports = new LeadController();
