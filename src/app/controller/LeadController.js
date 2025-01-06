@@ -43,10 +43,25 @@ class LeadController {
         const campoQuantidade = camposPersonalizados.find(field => field.custom_field_id === "63c93fa013dd8800114f49f4");
 
         let quantidade = '';
-        if (campoQuantidade && campoQuantidade.value.includes('-')) {
-          quantidade = campoQuantidade.value.split('-')[1].trim();
-        } else if (campoQuantidade) {
-          quantidade = campoQuantidade.value.trim();
+        // Verifica se o campoQuantidade existe e se tem um valor
+        if (campoQuantidade && campoQuantidade.value) {
+          let valor = campoQuantidade.value.trim();
+
+          // Se o valor contiver um hífen, extrai a parte após o hífen
+          if (valor.includes('-')) {
+            quantidade = valor.split('-')[1]?.trim() || ''; // Garantir que o valor após o hífen seja obtido corretamente
+
+            quantidade = valor.replace(/\D/g, '');
+          } else {
+            // Se não houver hífen, usa o valor diretamente
+            quantidade = valor;
+            quantidade = valor.replace(/\D/g, '');
+          }
+
+          // Caso a quantidade nao seja numérica, converte para número
+          if (!isNaN(quantidade)) {
+            quantidade = parseInt(quantidade, 10);
+          }
         }
 
         const origem = obj.deal_source && obj.deal_source.name ? obj.deal_source.name : 'N/A';

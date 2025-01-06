@@ -21,6 +21,7 @@ async function ensureConheceu(origem, conheceuModel) {
 }
 
 const fonte = async (db, conheceu) => {
+    console.log(conheceu)
     const conheceuModel = new ConheceuModel(db);
     return await conheceuModel.getConheceu(conheceu);
 };
@@ -51,7 +52,33 @@ async function processLeads(leadsList, db) {
         const razaoSocial = obj.organization?.name || ' ';
 
         const campoQuantidade = camposPersonalizados.find(field => field.custom_field_id === "63c93fa013dd8800114f49f4");
-        const quantidade = campoQuantidade?.value.split('-')[1]?.trim() || campoQuantidade?.value.trim() || '';
+
+        let quantidade = ''; 
+        // Verifica se o campoQuantidade existe e se tem um valor
+        if (campoQuantidade?.value?.trim()) {
+            let valor = campoQuantidade.value.trim();
+
+            // Se o valor contiver um hífen, extrai a parte após o hífen
+            if (valor.includes('-')) {
+                quantidade = valor.split('-')[1]?.trim() || '';
+            } else {
+                // Se não houver hífen, usa o valor diretamente
+                quantidade = valor;
+            }
+
+            // Remove tudo que não for número
+            quantidade = quantidade.replace(/\D/g, '');
+
+            // Converte para número, se possível
+            if (quantidade && !isNaN(quantidade)) {
+                quantidade = parseInt(quantidade, 10);
+            } else {
+                quantidade = 0; // Se ainda não for numérico, mantém como 0
+            }
+        }else {
+            quantidade = 0;
+        }
+ 
 
         const origem = obj.deal_source?.name || 'N/A';
         const conheceu = await ensureConheceu(origem, conheceuModel);
@@ -102,17 +129,22 @@ async function updateLeads(db) {
 
     const dadosParaEnviar = [];
     for (const lead of leadsNoBanco) {
+
+        
+
         const fonteId = await fonte(db, lead.Conheceu);
 
+        console.log(lead.Conheceu)
+       
         let nome;
-        
-        if (!lead.contato || lead.contato.trim().length === 0 ||  lead.contato.trim().length <= 3) {
+
+        if (!lead.contato || lead.contato.trim().length === 0 || lead.contato.trim().length <= 3) {
             nome = lead.Email.replace(/\s+/g, '');
         } else {
             nome = lead.contato.trim();
         }
 
-        
+
 
         const data = {
             deal: {
@@ -136,7 +168,7 @@ async function updateLeads(db) {
             deal_products: [{ name: lead.Produto }]
         };
 
-        await delay(5000); 
+        await delay(5000);
 
         const leadsCreate = await RDStation.createNegociacao(data);
         await clientesModel.updateLead({

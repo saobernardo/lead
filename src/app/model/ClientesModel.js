@@ -8,6 +8,9 @@ class ClientesModel {
   }
 
   async create(data) {
+
+    console.log(data);
+
     try {
       const [result] = await this.conn.raw(`
         INSERT INTO tblfclientes

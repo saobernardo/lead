@@ -33,10 +33,12 @@ class ConheceuModel {
   }
 
   async getConheceu(data){
+ 
+
     try {
       
       const [result] = await this.conn.raw(`SELECT idrdstationfonte FROM tblfconheceu WHERE Codigo = ? `, data);
-    
+      console.log(result)
       return result[0].idrdstationfonte;
     } catch (error) {
       console.error('Erro Get Conheceu:', error);
